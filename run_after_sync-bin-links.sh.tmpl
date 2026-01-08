@@ -1,0 +1,40 @@
+{{- if (eq .chezmoi.os "linux" "darwin") -}}
+#!/bin/bash
+
+# Define the base bin directory
+BIN_DIR="{{ .chezmoi.homeDir }}/bin"
+
+# Ensure bin directory exists
+mkdir -p "$BIN_DIR"
+
+echo "Syncing symlinks in $BIN_DIR..."
+
+# 1. Iterate through subdirectories in ~/bin
+# We exclude the top-level bin directory itself to avoid infinite loops
+find "$BIN_DIR" -mindepth 2 -maxdepth 2 -type f -executable | while read -r script; do
+    
+    # Get the filename only
+    filename=$(basename "$script")
+    target="$BIN_DIR/$filename"
+
+    # 2. Check if a file or symlink already exists at the target
+    if [[ -L "$target" ]]; then
+        # If it's a symlink, check if it points to the right place
+        if [[ "$(readlink "$target")" != "$script" ]]; then
+            ln -sf "$script" "$target"
+            echo "Updated symlink: $filename"
+        fi
+    elif [[ -e "$target" ]]; then
+        # If a real file exists there, don't overwrite it (safety first)
+        echo "Skip: $filename (local file already exists in bin/)"
+    else
+        # 3. Create the symlink
+        ln -s "$script" "$target"
+        echo "Created symlink: $filename"
+    fi
+done
+
+# 4. Optional: Clean up broken symlinks 
+# (In case you removed an external repo/subdirectory)
+find "$BIN_DIR" -maxdepth 1 -xtype l -delete
+{{ end -}}
