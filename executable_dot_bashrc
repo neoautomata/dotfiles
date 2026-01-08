@@ -1,0 +1,3 @@
+# redirect to the .profile instead
+export HOME="$(cd ~; pwd)"
+source "${HOME}/.profile"
