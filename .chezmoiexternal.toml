@@ -1,6 +1,0 @@
-["bin/bw_scripts"]
-    type = "archive"
-    url = "https://github.com/neoautomata/bw_scripts/archive/main.tar.gz"
-    exact = false
-    stripComponents = 1
-    refreshPeriod = "4h"

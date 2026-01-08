@@ -1,0 +1,13 @@
+["bin/bw_scripts"]
+    type = "archive"
+    url = "https://github.com/neoautomata/bw_scripts/archive/main.tar.gz"
+    exact = false
+    stripComponents = 1
+    refreshPeriod = "4h"
+
+["bin/bw.bin"]
+    type = "archive-file"
+    # url = {{ (gitHubLatestReleaseAssetURL "bitwarden/clients" "bw-linux-*.zip") | quote }}
+    url = "https://github.com/bitwarden/clients/releases/download/cli-v2025.12.0/bw-linux-2025.12.0.zip"
+    path = "bw"
+    executable = true
