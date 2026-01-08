@@ -7,7 +7,7 @@ BIN_DIR="{{ .chezmoi.homeDir }}/bin"
 # Ensure bin directory exists
 mkdir -p "$BIN_DIR"
 
-echo "Syncing symlinks in $BIN_DIR..."
+# echo "Syncing symlinks in $BIN_DIR..."
 
 # 1. Iterate through subdirectories in ~/bin
 # We exclude the top-level bin directory itself to avoid infinite loops
@@ -36,5 +36,5 @@ done
 
 # 4. Optional: Clean up broken symlinks 
 # (In case you removed an external repo/subdirectory)
-find "$BIN_DIR" -maxdepth 1 -xtype l -delete
+find "$BIN_DIR" -maxdepth 1 -xtype l -delete -exec echo "Deleted bad symlink {}" \;
 {{ end -}}
