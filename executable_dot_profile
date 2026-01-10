@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# enable/disable debugging
+export DEBUG=0
+# use via: test $DEBUG -eq 1 && echo ""
+
+# Emulate realpath if it doesn't exist (e.g. Mac OS X)
+type realpath >/dev/null 2>&1 || realpath() { perl -e 'use Cwd "abs_path"; print abs_path(@ARGV[0])."\n"' -- "$1"; } && export realpath
+
+# do nothing if not running interactively
+test $DEBUG -eq 1 && echo "Stop if not interative"
+[ -z "$PS1" ] && return
+[ -n "$PROGNAME" ] && return
+
+export HOME="$(cd ~; pwd)"
+for file in $(ls ${HOME}/.profile.d/*.sh); do
+  test $DEBUG -eq 1 && echo "Running: " $file
+  . $file
+done
+
+test $DEBUG -eq 1 && echo "DONE!"
+
+true # don't display an error for the first prompt
