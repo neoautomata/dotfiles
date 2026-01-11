@@ -3,7 +3,7 @@
     url = "https://github.com/neoautomata/bw_scripts/archive/main.tar.gz"
     exact = false
     stripComponents = 1
-    refreshPeriod = "4h"
+    refreshPeriod = "24h"
 
 ["bin/bw.bin"]
     type = "archive-file"
@@ -16,3 +16,11 @@
     url = {{ gitHubReleaseAssetURL "bitwarden/clients" $bwCliTag "bw-linux-*.zip" | quote }}
     path = "bw"
     executable = true
+    refreshPeriod = "24h"
+
+["bin/jj"]
+    type = "archive-file"
+    url = {{ gitHubLatestReleaseAssetURL "jj-vcs/jj" "jj-*-x86_64-unknown-linux-musl.tar.gz" | quote }}
+    path = "./jj"
+    executable = true
+    refreshPeriod = "24h"
