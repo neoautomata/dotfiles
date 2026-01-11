@@ -7,7 +7,12 @@
 
 ["bin/bw.bin"]
     type = "archive-file"
-    # url = {{ (gitHubLatestReleaseAssetURL "bitwarden/clients" "bw-linux-*.zip") | quote }}
-    url = "https://github.com/bitwarden/clients/releases/download/cli-v2025.12.0/bw-linux-2025.12.0.zip"
+    {{- $bwCliTag := "" -}}
+    {{- range (gitHubReleases "bitwarden/clients") -}}
+      {{- if and (not $bwCliTag) (hasPrefix "cli-v" (toString .TagName)) -}}
+        {{- $bwCliTag = (toString .TagName) -}}
+      {{- end -}}
+    {{- end }}
+    url = {{ gitHubReleaseAssetURL "bitwarden/clients" $bwCliTag "bw-linux-*.zip" | quote }}
     path = "bw"
     executable = true
