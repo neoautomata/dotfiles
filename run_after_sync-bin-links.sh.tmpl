@@ -1,6 +1,8 @@
 {{- if (eq .chezmoi.os "linux" "darwin") -}}
 #!/bin/bash
 
+# Trigger Hash: {{ output "sh" "-c" (print "find " .chezmoi.homeDir "/bin -mindepth 2 -maxdepth 2 -not -path '*/.*' | sort | sha256sum") }}
+
 # Define the base bin directory
 BIN_DIR="{{ .chezmoi.homeDir }}/bin"
 
