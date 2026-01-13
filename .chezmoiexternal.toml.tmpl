@@ -40,5 +40,5 @@
     filter.command = "sh"
     filter.args = [
         "-c",
-        "BUILD_DIR=$(mktemp -d) && trap 'rm -rf \"$BUILD_DIR\"' EXIT && tar -xz -C \"$BUILD_DIR\" --strip-components=1 && (cd \"$BUILD_DIR\" && CGO_ENABLED=1 go build -o massren . 2>/dev/null) && cat \"$BUILD_DIR/massren\""
+        "BUILD_DIR=$(mktemp -d) && trap 'rm -rf \"$BUILD_DIR\"' EXIT && tar -xz -C \"$BUILD_DIR\" --strip-components=1 && (cd \"$BUILD_DIR\" && CGO_ENABLED=1 go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o massren . 2>/dev/null) && cat \"$BUILD_DIR/massren\""
     ]
