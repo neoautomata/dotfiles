@@ -117,7 +117,7 @@ Set `PROFILE_DEBUG=1` to print debug messages to `stderr` while loading `~/.prof
 
 `run_after_sync-bin-links.sh.tmpl` scans executable files at depth two (`~/bin/<subdir>/<file>`).
 
-- The script skips hidden files and hidden directories.
+- The script skips hidden files, hidden directories, and `install.sh` scripts.
 - The script preserves existing regular files and valid symlinks in `~/bin`.
 - The script removes broken symlinks in `~/bin` or replaces them when a matching executable exists.
 - Duplicate basenames across subdirectories emit a warning to `stderr` and keep the first match.

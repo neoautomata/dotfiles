@@ -37,6 +37,14 @@ sync_bin_links() {
         filename="${script##*/}"
         target="$bin_dir/$filename"
 
+        if [ "$filename" = "install.sh" ]; then
+            if [ -L "$target" ] && [ "$(readlink -- "$target")" = "$script" ]; then
+                rm -- "$target"
+                printf 'Removed symlink: %s\n' "$filename"
+            fi
+            continue
+        fi
+
         duplicate=0
         existing_source=""
         if [ "${#seen_names[@]}" -gt 0 ]; then

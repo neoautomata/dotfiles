@@ -59,6 +59,12 @@ printf 'readme\n' > "$BIN_DIR/pkg_a/not_exec"
 printf '#!/bin/sh\necho hidden\n' > "$BIN_DIR/pkg_a/.hidden_exec"
 chmod +x "$BIN_DIR/pkg_a/.hidden_exec"
 
+# install.sh executables in subdirectories (sync_bin_links skips them without collision warnings).
+printf '#!/bin/sh\necho install_a\n' > "$BIN_DIR/pkg_a/install.sh"
+chmod +x "$BIN_DIR/pkg_a/install.sh"
+printf '#!/bin/sh\necho install_b\n' > "$BIN_DIR/pkg_b/install.sh"
+chmod +x "$BIN_DIR/pkg_b/install.sh"
+
 # Executable in hidden directory (sync_bin_links skips it).
 printf '#!/bin/sh\necho git\n' > "$BIN_DIR/.hidden_dir/hook"
 chmod +x "$BIN_DIR/.hidden_dir/hook"
@@ -112,6 +118,9 @@ assert_eq "$(readlink "$BIN_DIR/my script")" "$BIN_DIR/my tools/my script" "my s
 # Verify skipped entries do not exist in ~/bin.
 [ ! -e "$BIN_DIR/not_exec" ] || fail "sync_bin_links must not link a non-executable file."
 [ ! -e "$BIN_DIR/.hidden_exec" ] || fail "sync_bin_links must not link a hidden file."
+if [ -e "$BIN_DIR/install.sh" ] || [ -L "$BIN_DIR/install.sh" ]; then
+    fail "sync_bin_links must not link install.sh."
+fi
 [ ! -e "$BIN_DIR/hook" ] || fail "sync_bin_links must not link a file in a hidden directory."
 [ ! -e "$BIN_DIR/deep_tool" ] || fail "sync_bin_links must not link a file at depth 3."
 
@@ -196,5 +205,23 @@ chmod +x "$CDPATH_WORK/mybin/sub/cdtool"
 )
 [ -L "$CDPATH_WORK/mybin/cdtool" ] || fail "sync_bin_links did not create symlink when CDPATH is set."
 assert_eq "$(readlink -- "$CDPATH_WORK/mybin/cdtool")" "$CDPATH_WORK/mybin/sub/cdtool" "CDPATH relative bin_dir symlink target"
+
+# Verify sync_bin_links removes a previous symlink to a subdirectory install.sh,
+# and preserves a regular file named install.sh.
+INSTALL_CLEANUP_BIN="$TMP_ROOT/bin_install_cleanup"
+mkdir -p "$INSTALL_CLEANUP_BIN/pkg"
+printf '#!/bin/sh\necho install\n' > "$INSTALL_CLEANUP_BIN/pkg/install.sh"
+chmod +x "$INSTALL_CLEANUP_BIN/pkg/install.sh"
+ln -s "$INSTALL_CLEANUP_BIN/pkg/install.sh" "$INSTALL_CLEANUP_BIN/install.sh"
+sync_bin_links "$INSTALL_CLEANUP_BIN" >/dev/null
+if [ -e "$INSTALL_CLEANUP_BIN/install.sh" ] || [ -L "$INSTALL_CLEANUP_BIN/install.sh" ]; then
+    fail "sync_bin_links must remove an existing symlink to a subdirectory install.sh."
+fi
+
+printf 'custom install\n' > "$INSTALL_CLEANUP_BIN/install.sh"
+sync_bin_links "$INSTALL_CLEANUP_BIN" >/dev/null
+if [ ! -f "$INSTALL_CLEANUP_BIN/install.sh" ] || [ -L "$INSTALL_CLEANUP_BIN/install.sh" ]; then
+    fail "sync_bin_links must preserve a regular install.sh file in ~/bin."
+fi
 
 printf 'All sync-bin-links tests passed.\n'
