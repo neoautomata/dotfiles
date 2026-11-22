@@ -95,7 +95,7 @@ import sys, tomllib
 with open(sys.argv[1], "rb") as f:
     data = tomllib.load(f)
 assert "bin/bw_scripts" in data
-for excluded in ("bin/bw.bin", "bin/chezmoi", "bin/jj", "bin/massren"):
+for excluded in ("bin/bw.bin", "bin/chezmoi", "bin/fzf", "bin/jj", "bin/massren", "bin/rg"):
     assert excluded not in data, f"Template must omit {excluded} on windows"
 EOF
 
@@ -121,7 +121,7 @@ path, os_name, arch_name = sys.argv[1], sys.argv[2], sys.argv[3]
 with open(path, "rb") as f:
     data = tomllib.load(f)
 
-for key in ("bin/bw_scripts", "bin/bw.bin", "bin/chezmoi", "bin/jj", "bin/massren"):
+for key in ("bin/bw_scripts", "bin/bw.bin", "bin/chezmoi", "bin/fzf", "bin/jj", "bin/massren", "bin/rg"):
     assert key in data, f"Missing {key} for {os_name}/{arch_name}"
     assert data[key]["url"].startswith("https://"), f"Invalid URL for {key}: {data[key]['url']}"
 
@@ -133,6 +133,20 @@ else:
     assert "arm64" not in data["bin/bw.bin"]["url"], f"Unexpected arm64 in amd64 bw URL: {data['bin/bw.bin']['url']}"
 
 assert f"{os_name}_{arch_name}.tar.gz" in data["bin/chezmoi"]["url"]
+assert data["bin/fzf"]["url"].endswith(f"-{os_name}_{arch_name}.tar.gz")
+assert data["bin/fzf"]["path"] == "fzf"
+
+rust_targets = {
+    ("linux", "amd64"): "x86_64-unknown-linux-musl",
+    ("linux", "arm64"): "aarch64-unknown-linux-musl",
+    ("darwin", "amd64"): "x86_64-apple-darwin",
+    ("darwin", "arm64"): "aarch64-apple-darwin",
+}
+rust_target = rust_targets[(os_name, arch_name)]
+assert data["bin/jj"]["url"].endswith(f"-{rust_target}.tar.gz")
+assert data["bin/rg"]["url"].endswith(f"-{rust_target}.tar.gz")
+assert data["bin/rg"]["path"] == "rg"
+assert data["bin/rg"]["stripComponents"] == 1
 EOF
 done
 

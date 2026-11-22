@@ -36,8 +36,10 @@ flowchart LR
 | `~/bin/bw_scripts` | `neoautomata/bw_scripts` | All | Extracts archive and links executables into `~/bin`. |
 | `~/bin/bw.bin` | `bitwarden/clients` | Linux, macOS (`amd64`, `arm64`) | Matches the latest `cli-v*` release asset. |
 | `~/bin/chezmoi` | `twpayne/chezmoi` | Linux, macOS (`amd64`, `arm64`) | Extracts `chezmoi` from the release tarball. |
+| `~/bin/fzf` | `junegunn/fzf` | Linux, macOS (`amd64`, `arm64`) | Extracts `fzf` from the release tarball. |
 | `~/bin/jj` | `jj-vcs/jj` | Linux, macOS (`amd64`, `arm64`) | Extracts `jj` from the release tarball. |
 | `~/bin/massren` | `laurent22/massren` | Linux, macOS | Compiles from source with Go and CGo. |
+| `~/bin/rg` | `BurntSushi/ripgrep` | Linux, macOS (`amd64`, `arm64`) | Extracts `rg` from the release tarball. |
 
 ## Prerequisites
 

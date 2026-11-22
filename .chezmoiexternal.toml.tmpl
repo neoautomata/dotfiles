@@ -51,24 +51,48 @@
     refreshPeriod = "24h"
   {{- end }}
 
-  {{- $jjTarget := "" }}
-  {{- if and (eq $os "linux") (eq $arch "amd64") }}
-    {{- $jjTarget = "x86_64-unknown-linux-musl" }}
-  {{- else if and (eq $os "linux") (eq $arch "arm64") }}
-    {{- $jjTarget = "aarch64-unknown-linux-musl" }}
-  {{- else if and (eq $os "darwin") (eq $arch "amd64") }}
-    {{- $jjTarget = "x86_64-apple-darwin" }}
-  {{- else if and (eq $os "darwin") (eq $arch "arm64") }}
-    {{- $jjTarget = "aarch64-apple-darwin" }}
+  {{- $fzfPattern := printf "fzf-*-%s_%s.tar.gz" $os $arch }}
+  {{- $fzfURL := gitHubLatestReleaseAssetURL "junegunn/fzf" $fzfPattern }}
+  {{- if $fzfURL }}
+
+["bin/fzf"]
+    type = "archive-file"
+    url = {{ $fzfURL | quote }}
+    path = "fzf"
+    executable = true
+    refreshPeriod = "24h"
   {{- end }}
-  {{- if $jjTarget }}
-    {{- $jjURL := gitHubLatestReleaseAssetURL "jj-vcs/jj" (printf "jj-*-%s.tar.gz" $jjTarget) }}
+
+  {{- $rustTarget := "" }}
+  {{- if and (eq $os "linux") (eq $arch "amd64") }}
+    {{- $rustTarget = "x86_64-unknown-linux-musl" }}
+  {{- else if and (eq $os "linux") (eq $arch "arm64") }}
+    {{- $rustTarget = "aarch64-unknown-linux-musl" }}
+  {{- else if and (eq $os "darwin") (eq $arch "amd64") }}
+    {{- $rustTarget = "x86_64-apple-darwin" }}
+  {{- else if and (eq $os "darwin") (eq $arch "arm64") }}
+    {{- $rustTarget = "aarch64-apple-darwin" }}
+  {{- end }}
+  {{- if $rustTarget }}
+    {{- $jjURL := gitHubLatestReleaseAssetURL "jj-vcs/jj" (printf "jj-*-%s.tar.gz" $rustTarget) }}
     {{- if $jjURL }}
 
 ["bin/jj"]
     type = "archive-file"
     url = {{ $jjURL | quote }}
     path = "./jj"
+    executable = true
+    refreshPeriod = "24h"
+    {{- end }}
+
+    {{- $rgURL := gitHubLatestReleaseAssetURL "BurntSushi/ripgrep" (printf "ripgrep-*-%s.tar.gz" $rustTarget) }}
+    {{- if $rgURL }}
+
+["bin/rg"]
+    type = "archive-file"
+    url = {{ $rgURL | quote }}
+    path = "rg"
+    stripComponents = 1
     executable = true
     refreshPeriod = "24h"
     {{- end }}
