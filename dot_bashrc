@@ -1,0 +1,6 @@
+# shellcheck shell=bash
+# Load ~/.profile so interactive and login Bash shells share one setup.
+if [ -n "${HOME:-}" ] && [ -r "${HOME}/.profile" ]; then
+    # shellcheck source=/dev/null
+    . "${HOME}/.profile"
+fi

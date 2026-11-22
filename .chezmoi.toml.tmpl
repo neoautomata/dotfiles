@@ -1,7 +1,9 @@
 [git]
     autoCommit = true
     autoPush = true
+{{- if lookPath "subl" }}
 
 [edit]
     command = "subl"
-    args = ["-n", "-w"]
+    args = ["--wait"]
+{{- end }}

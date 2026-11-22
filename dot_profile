@@ -1,0 +1,55 @@
+# shellcheck shell=sh
+# POSIX login shell initialization script.
+
+# Add ~/bin to PATH without duplicating it so non-interactive login shells find user tools.
+if [ -n "${HOME:-}" ] && [ -d "${HOME}/bin" ]; then
+    case ":${PATH:-}:" in
+        *":${HOME}/bin:"*) ;;
+        *) PATH="${HOME}/bin${PATH:+:${PATH}}" ;;
+    esac
+    export PATH
+fi
+
+# Define a realpath fallback for systems that omit the realpath binary.
+if ! command -v realpath >/dev/null 2>&1; then
+    realpath() {
+        if [ "$#" -lt 1 ] || [ -z "$1" ]; then
+            printf '%s\n' 'Error: realpath requires a path argument.' >&2
+            return 1
+        fi
+        if ! command -v perl >/dev/null 2>&1; then
+            printf '%s\n' 'Error: perl is not installed. Install realpath or perl.' >&2
+            return 1
+        fi
+        perl -MCwd=abs_path -e 'my $p = abs_path($ARGV[0]); exit 1 unless defined $p; print "$p\n";' -- "$1"
+    }
+fi
+
+# Load interactive shell hooks only in interactive shells without PROGNAME set.
+case "$-" in
+    *i*)
+        if [ -z "${PROGNAME:-}" ] && [ -n "${HOME:-}" ] && [ -d "${HOME}/.profile.d" ]; then
+            for profile_file in "${HOME}/.profile.d"/*.sh; do
+                if [ -f "$profile_file" ] && [ -r "$profile_file" ]; then
+                    if [ "${PROFILE_DEBUG:-0}" = "1" ]; then
+                        printf 'dot_profile: load %s\n' "$profile_file" >&2
+                    fi
+                    # shellcheck source=/dev/null
+                    . "$profile_file"
+                fi
+            done
+            unset profile_file
+        fi
+        ;;
+    *)
+        if [ "${PROFILE_DEBUG:-0}" = "1" ]; then
+            printf '%s\n' 'dot_profile: skip interactive hooks in non-interactive shell.' >&2
+        fi
+        ;;
+esac
+
+if [ "${PROFILE_DEBUG:-0}" = "1" ]; then
+    printf '%s\n' 'dot_profile: finished loading.' >&2
+fi
+
+:

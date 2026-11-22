@@ -1,44 +1,94 @@
+# External binaries and scripts managed by chezmoi under ~/bin.
+{{- $os := .chezmoi.os }}
+{{- $arch := .chezmoi.arch }}
+{{- $supportedUnix := or (eq $os "linux") (eq $os "darwin") }}
+{{- $supportedArch := or (eq $arch "amd64") (eq $arch "arm64") }}
+
 ["bin/bw_scripts"]
     type = "archive"
     url = "https://github.com/neoautomata/bw_scripts/archive/main.tar.gz"
     exact = false
     stripComponents = 1
     refreshPeriod = "24h"
+{{- if and $supportedUnix $supportedArch }}
+  {{- $bwOS := $os }}
+  {{- if eq $os "darwin" }}
+    {{- $bwOS = "macos" }}
+  {{- end }}
+  {{- $bwPattern := printf "^bw-(?:oss-)?%s-[0-9].*\\.zip$" $bwOS }}
+  {{- if eq $arch "arm64" }}
+    {{- $bwPattern = printf "^bw-(?:oss-)?%s-arm64-.*\\.zip$" $bwOS }}
+  {{- end }}
+  {{- $bwURL := "" }}
+  {{- range (gitHubReleases "bitwarden/clients") }}
+    {{- if and (not $bwURL) (hasPrefix "cli-v" (toString .TagName)) }}
+      {{- range .Assets }}
+        {{- if and (not $bwURL) (regexMatch $bwPattern (toString .Name)) }}
+          {{- $bwURL = toString .BrowserDownloadURL }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if $bwURL }}
 
 ["bin/bw.bin"]
     type = "archive-file"
-    {{- $bwCliTag := "" -}}
-    {{- range (gitHubReleases "bitwarden/clients") -}}
-      {{- if and (not $bwCliTag) (hasPrefix "cli-v" (toString .TagName)) -}}
-        {{- $bwCliTag = (toString .TagName) -}}
-      {{- end -}}
-    {{- end }}
-    url = {{ gitHubReleaseAssetURL "bitwarden/clients" $bwCliTag "bw-linux-*.zip" | quote }}
+    url = {{ $bwURL | quote }}
     path = "bw"
     executable = true
     refreshPeriod = "24h"
+  {{- end }}
+
+  {{- $chezmoiPattern := printf "chezmoi_*_%s_%s.tar.gz" $os $arch }}
+  {{- $chezmoiURL := gitHubLatestReleaseAssetURL "twpayne/chezmoi" $chezmoiPattern }}
+  {{- if $chezmoiURL }}
 
 ["bin/chezmoi"]
-    type = "file"
-    url = "https://github.com/twpayne/chezmoi/releases/latest/download/chezmoi-{{ .chezmoi.os }}-{{ .chezmoi.arch }}"
+    type = "archive-file"
+    url = {{ $chezmoiURL | quote }}
+    path = "chezmoi"
     executable = true
     refreshPeriod = "24h"
+  {{- end }}
+
+  {{- $jjTarget := "" }}
+  {{- if and (eq $os "linux") (eq $arch "amd64") }}
+    {{- $jjTarget = "x86_64-unknown-linux-musl" }}
+  {{- else if and (eq $os "linux") (eq $arch "arm64") }}
+    {{- $jjTarget = "aarch64-unknown-linux-musl" }}
+  {{- else if and (eq $os "darwin") (eq $arch "amd64") }}
+    {{- $jjTarget = "x86_64-apple-darwin" }}
+  {{- else if and (eq $os "darwin") (eq $arch "arm64") }}
+    {{- $jjTarget = "aarch64-apple-darwin" }}
+  {{- end }}
+  {{- if $jjTarget }}
+    {{- $jjURL := gitHubLatestReleaseAssetURL "jj-vcs/jj" (printf "jj-*-%s.tar.gz" $jjTarget) }}
+    {{- if $jjURL }}
 
 ["bin/jj"]
     type = "archive-file"
-    url = {{ gitHubLatestReleaseAssetURL "jj-vcs/jj" "jj-*-x86_64-unknown-linux-musl.tar.gz" | quote }}
+    url = {{ $jjURL | quote }}
     path = "./jj"
     executable = true
     refreshPeriod = "24h"
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- if $supportedUnix }}
+  {{- $massrenTag := toString (gitHubLatestRelease "laurent22/massren").TagName }}
+  {{- if $massrenTag }}
 
 ["bin/massren"]
+    # Build massren from its source archive because upstream publishes no binaries.
     type = "file"
-    # We use the source code archive URL since no binary assets exist
-    url = "https://github.com/laurent22/massren/archive/refs/tags/{{ (gitHubLatestRelease "laurent22/massren").TagName }}.tar.gz"
+    url = {{ printf "https://github.com/laurent22/massren/archive/refs/tags/%s.tar.gz" $massrenTag | quote }}
     executable = true
     refreshPeriod = "24h"
     filter.command = "sh"
     filter.args = [
+        "-eu",
         "-c",
-        "BUILD_DIR=$(mktemp -d) && trap 'rm -rf \"$BUILD_DIR\"' EXIT && tar -xz -C \"$BUILD_DIR\" --strip-components=1 && (cd \"$BUILD_DIR\" && CGO_ENABLED=1 go build -trimpath -buildvcs=false -ldflags=\"-s -w -buildid=\" -o massren . 2>/dev/null) && cat \"$BUILD_DIR/massren\""
+        "command -v go >/dev/null 2>&1 || { printf '%s\\n' 'Error: go is not installed. Install Go to build massren.' >&2; exit 1; }; command -v tar >/dev/null 2>&1 || { printf '%s\\n' 'Error: tar is not installed. Install tar to extract massren.' >&2; exit 1; }; if [ -n \"${CC:-}\" ]; then command -v \"$CC\" >/dev/null 2>&1 || command -v \"${CC%% *}\" >/dev/null 2>&1; else command -v cc >/dev/null 2>&1 || command -v gcc >/dev/null 2>&1 || command -v clang >/dev/null 2>&1; fi || { printf '%s\\n' 'Error: No C compiler is installed. Install cc, gcc, or clang to build massren.' >&2; exit 1; }; BUILD_DIR=$(mktemp -d); cleanup() { rm -rf \"$BUILD_DIR\"; }; trap cleanup EXIT; trap 'exit 130' INT; trap 'exit 143' TERM; trap 'exit 129' HUP; tar -xzf - -C \"$BUILD_DIR\" --strip-components=1; (cd \"$BUILD_DIR\" && CGO_ENABLED=1 go build -trimpath -buildvcs=false -ldflags=\"-s -w -buildid=\" -o massren . 1>&2); cat \"$BUILD_DIR/massren\""
     ]
+  {{- end }}
+{{- end }}

@@ -1,0 +1,95 @@
+{{- if or (eq .chezmoi.os "linux") (eq .chezmoi.os "darwin") -}}
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Sync symlinks in ~/bin for executable files inside direct subdirectories.
+# Runs after chezmoi applies externals so newly downloaded tools link immediately.
+
+DEFAULT_BIN_DIR="{{ .chezmoi.destDir }}/bin"
+
+sync_bin_links() {
+    local bin_dir="${1:-$DEFAULT_BIN_DIR}"
+
+    if [ ! -d "$bin_dir" ]; then
+        return 0
+    fi
+
+    # Resolve relative and leading-dash paths so created symlinks stay absolute and valid.
+    bin_dir="$(CDPATH='' cd -- "$bin_dir" && pwd)"
+
+    local had_nullglob=0
+    if shopt -q nullglob; then
+        had_nullglob=1
+    else
+        shopt -s nullglob
+    fi
+
+    local seen_names=()
+    local seen_sources=()
+    local script filename target current_link i existing_source duplicate
+
+    # Bash globbing without dotglob excludes hidden directories and hidden files.
+    for script in "$bin_dir"/*/*; do
+        if [ ! -f "$script" ] || [ ! -x "$script" ] || [ -d "$script" ]; then
+            continue
+        fi
+
+        filename="${script##*/}"
+        target="$bin_dir/$filename"
+
+        duplicate=0
+        existing_source=""
+        if [ "${#seen_names[@]}" -gt 0 ]; then
+            for ((i = 0; i < ${#seen_names[@]}; i++)); do
+                if [ "${seen_names[$i]}" = "$filename" ]; then
+                    duplicate=1
+                    existing_source="${seen_sources[$i]}"
+                    break
+                fi
+            done
+        fi
+
+        if [ "$duplicate" -eq 1 ]; then
+            printf 'Warning: skip duplicate executable %s (already linked from %s).\n' "$script" "$existing_source" >&2
+            continue
+        fi
+
+        seen_names+=("$filename")
+        seen_sources+=("$script")
+
+        if [ -L "$target" ]; then
+            current_link="$(readlink -- "$target")"
+            if [ "$current_link" = "$script" ]; then
+                continue
+            elif [ -e "$target" ]; then
+                printf 'Skip: %s (valid symlink already exists in %s).\n' "$filename" "$bin_dir"
+            else
+                ln -sfn -- "$script" "$target"
+                printf 'Updated symlink: %s\n' "$filename"
+            fi
+        elif [ -e "$target" ]; then
+            printf 'Skip: %s (file already exists in %s).\n' "$filename" "$bin_dir"
+        else
+            ln -s -- "$script" "$target"
+            printf 'Created symlink: %s\n' "$filename"
+        fi
+    done
+
+    # Remove broken symlinks in the top-level bin directory.
+    local entry
+    for entry in "$bin_dir"/*; do
+        if [ -L "$entry" ] && [ ! -e "$entry" ]; then
+            rm -- "$entry"
+            printf 'Removed broken symlink: %s\n' "${entry##*/}"
+        fi
+    done
+
+    if [ "$had_nullglob" -eq 0 ]; then
+        shopt -u nullglob
+    fi
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    sync_bin_links "${1:-${SYNC_BIN_DIR:-$DEFAULT_BIN_DIR}}"
+fi
+{{- end }}
