@@ -95,6 +95,9 @@ import sys, tomllib
 with open(sys.argv[1], "rb") as f:
     data = tomllib.load(f)
 assert "bin/bw_scripts" in data
+assert data["bin/bw_scripts"]["type"] == "git-repo"
+assert data["bin/bw_scripts"]["url"] == "https://github.com/neoautomata/bw_scripts.git"
+assert data["bin/bw_scripts"]["refreshPeriod"] == "24h"
 for excluded in ("bin/bw.bin", "bin/chezmoi", "bin/fzf", "bin/jj", "bin/massren", "bin/rg"):
     assert excluded not in data, f"Template must omit {excluded} on windows"
 EOF
@@ -124,6 +127,12 @@ with open(path, "rb") as f:
 for key in ("bin/bw_scripts", "bin/bw.bin", "bin/chezmoi", "bin/fzf", "bin/jj", "bin/massren", "bin/rg"):
     assert key in data, f"Missing {key} for {os_name}/{arch_name}"
     assert data[key]["url"].startswith("https://"), f"Invalid URL for {key}: {data[key]['url']}"
+
+assert data["bin/bw_scripts"]["type"] == "git-repo"
+assert data["bin/bw_scripts"]["url"] == "https://github.com/neoautomata/bw_scripts.git"
+assert data["bin/bw_scripts"]["refreshPeriod"] == "24h"
+for versioned in ("bin/bw.bin", "bin/chezmoi", "bin/fzf", "bin/jj", "bin/massren", "bin/rg"):
+    assert "refreshPeriod" not in data[versioned], f"Unexpected refreshPeriod on versioned URL {versioned}"
 
 bw_os = "macos" if os_name == "darwin" else "linux"
 assert bw_os in data["bin/bw.bin"]["url"], f"Wrong OS in bw URL: {data['bin/bw.bin']['url']}"

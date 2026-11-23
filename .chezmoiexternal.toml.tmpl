@@ -5,10 +5,8 @@
 {{- $supportedArch := or (eq $arch "amd64") (eq $arch "arm64") }}
 
 ["bin/bw_scripts"]
-    type = "archive"
-    url = "https://github.com/neoautomata/bw_scripts/archive/main.tar.gz"
-    exact = false
-    stripComponents = 1
+    type = "git-repo"
+    url = "https://github.com/neoautomata/bw_scripts.git"
     refreshPeriod = "24h"
 {{- if and $supportedUnix $supportedArch }}
   {{- $bwOS := $os }}
@@ -36,7 +34,6 @@
     url = {{ $bwURL | quote }}
     path = "bw"
     executable = true
-    refreshPeriod = "24h"
   {{- end }}
 
   {{- $chezmoiPattern := printf "chezmoi_*_%s_%s.tar.gz" $os $arch }}
@@ -48,7 +45,6 @@
     url = {{ $chezmoiURL | quote }}
     path = "chezmoi"
     executable = true
-    refreshPeriod = "24h"
   {{- end }}
 
   {{- $fzfPattern := printf "fzf-*-%s_%s.tar.gz" $os $arch }}
@@ -60,7 +56,6 @@
     url = {{ $fzfURL | quote }}
     path = "fzf"
     executable = true
-    refreshPeriod = "24h"
   {{- end }}
 
   {{- $rustTarget := "" }}
@@ -82,7 +77,6 @@
     url = {{ $jjURL | quote }}
     path = "./jj"
     executable = true
-    refreshPeriod = "24h"
     {{- end }}
 
     {{- $rgURL := gitHubLatestReleaseAssetURL "BurntSushi/ripgrep" (printf "ripgrep-*-%s.tar.gz" $rustTarget) }}
@@ -94,7 +88,6 @@
     path = "rg"
     stripComponents = 1
     executable = true
-    refreshPeriod = "24h"
     {{- end }}
   {{- end }}
 {{- end }}
@@ -107,7 +100,6 @@
     type = "file"
     url = {{ printf "https://github.com/laurent22/massren/archive/refs/tags/%s.tar.gz" $massrenTag | quote }}
     executable = true
-    refreshPeriod = "24h"
     filter.command = "sh"
     filter.args = [
         "-eu",
