@@ -1,0 +1,27 @@
+{{- if or (eq .chezmoi.os "linux") (eq .chezmoi.os "darwin") -}}
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Temporary migration: symlink unmanaged legacy scripts from ~/.dotfiles/.profile.d
+# into ~/.profile.d after chezmoi replaces the ~/.profile.d symlink with a directory.
+
+DEST_DIR="{{ .chezmoi.destDir }}"
+PROFILE_D="$DEST_DIR/.profile.d"
+LEGACY_DIR="$DEST_DIR/.dotfiles/.profile.d"
+
+if [ ! -d "$PROFILE_D" ] || [ -L "$PROFILE_D" ] || [ ! -d "$LEGACY_DIR" ]; then
+    exit 0
+fi
+
+LEGACY_ABS="$(CDPATH='' cd -- "$LEGACY_DIR" && pwd)"
+
+shopt -s nullglob
+for entry in "$LEGACY_ABS"/*; do
+    name="${entry##*/}"
+    target="$PROFILE_D/$name"
+    if [ -e "$target" ] || [ -L "$target" ]; then
+        continue
+    fi
+    ln -s -- "$entry" "$target"
+done
+{{- end }}
