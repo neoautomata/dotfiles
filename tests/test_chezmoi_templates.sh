@@ -131,15 +131,18 @@ for key in ("bin/bw_scripts", "bin/bw.bin", "bin/chezmoi", "bin/fzf", "bin/jj", 
 assert data["bin/bw_scripts"]["type"] == "git-repo"
 assert data["bin/bw_scripts"]["url"] == "https://github.com/neoautomata/bw_scripts.git"
 assert data["bin/bw_scripts"]["refreshPeriod"] == "24h"
-for versioned in ("bin/bw.bin", "bin/chezmoi", "bin/fzf", "bin/jj", "bin/massren", "bin/rg"):
+for versioned in ("bin/chezmoi", "bin/fzf", "bin/jj", "bin/massren", "bin/rg"):
     assert "refreshPeriod" not in data[versioned], f"Unexpected refreshPeriod on versioned URL {versioned}"
 
 bw_os = "macos" if os_name == "darwin" else "linux"
-assert bw_os in data["bin/bw.bin"]["url"], f"Wrong OS in bw URL: {data['bin/bw.bin']['url']}"
-if arch_name == "arm64":
-    assert "arm64" in data["bin/bw.bin"]["url"], f"Expected arm64 in bw URL: {data['bin/bw.bin']['url']}"
+if arch_name == "amd64":
+    assert data["bin/bw.bin"]["url"] == f"https://vault.bitwarden.com/download/?app=cli&platform={bw_os}"
+    assert data["bin/bw.bin"]["format"] == "zip"
+    assert data["bin/bw.bin"]["refreshPeriod"] == "24h"
 else:
-    assert "arm64" not in data["bin/bw.bin"]["url"], f"Unexpected arm64 in amd64 bw URL: {data['bin/bw.bin']['url']}"
+    assert bw_os in data["bin/bw.bin"]["url"], f"Wrong OS in bw URL: {data['bin/bw.bin']['url']}"
+    assert "arm64" in data["bin/bw.bin"]["url"], f"Expected arm64 in bw URL: {data['bin/bw.bin']['url']}"
+    assert "refreshPeriod" not in data["bin/bw.bin"], "Unexpected refreshPeriod on versioned arm64 bw URL"
 
 assert f"{os_name}_{arch_name}.tar.gz" in data["bin/chezmoi"]["url"]
 assert data["bin/fzf"]["url"].endswith(f"-{os_name}_{arch_name}.tar.gz")

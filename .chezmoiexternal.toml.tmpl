@@ -13,27 +13,35 @@
   {{- if eq $os "darwin" }}
     {{- $bwOS = "macos" }}
   {{- end }}
-  {{- $bwPattern := printf "^bw-(?:oss-)?%s-[0-9].*\\.zip$" $bwOS }}
-  {{- if eq $arch "arm64" }}
-    {{- $bwPattern = printf "^bw-(?:oss-)?%s-arm64-.*\\.zip$" $bwOS }}
-  {{- end }}
-  {{- $bwURL := "" }}
-  {{- range (gitHubReleases "bitwarden/clients") }}
-    {{- if and (not $bwURL) (hasPrefix "cli-v" (toString .TagName)) }}
-      {{- range .Assets }}
-        {{- if and (not $bwURL) (regexMatch $bwPattern (toString .Name)) }}
-          {{- $bwURL = toString .BrowserDownloadURL }}
+  {{- if eq $arch "amd64" }}
+
+["bin/bw.bin"]
+    type = "archive-file"
+    url = {{ printf "https://vault.bitwarden.com/download/?app=cli&platform=%s" $bwOS | quote }}
+    format = "zip"
+    path = "bw"
+    executable = true
+    refreshPeriod = "24h"
+  {{- else }}
+    {{- $bwPattern := printf "^bw-(?:oss-)?%s-arm64-.*\\.zip$" $bwOS }}
+    {{- $bwURL := "" }}
+    {{- range (gitHubReleases "bitwarden/clients") }}
+      {{- if and (not $bwURL) (hasPrefix "cli-v" (toString .TagName)) }}
+        {{- range .Assets }}
+          {{- if and (not $bwURL) (regexMatch $bwPattern (toString .Name)) }}
+            {{- $bwURL = toString .BrowserDownloadURL }}
+          {{- end }}
         {{- end }}
       {{- end }}
     {{- end }}
-  {{- end }}
-  {{- if $bwURL }}
+    {{- if $bwURL }}
 
 ["bin/bw.bin"]
     type = "archive-file"
     url = {{ $bwURL | quote }}
     path = "bw"
     executable = true
+    {{- end }}
   {{- end }}
 
   {{- $chezmoiPattern := printf "chezmoi_*_%s_%s.tar.gz" $os $arch }}

@@ -34,7 +34,7 @@ flowchart LR
 | Target | Upstream Source | Platforms | Notes |
 | --- | --- | --- | --- |
 | `~/bin/bw_scripts` | `neoautomata/bw_scripts` | All | Clones the Git repository and links executables into `~/bin`. |
-| `~/bin/bw.bin` | `bitwarden/clients` | Linux, macOS (`amd64`, `arm64`) | Matches the latest `cli-v*` release asset. |
+| `~/bin/bw.bin` | `vault.bitwarden.com` (`amd64`), `bitwarden/clients` (`arm64`) | Linux, macOS (`amd64`, `arm64`) | Uses the official redirect URL on `amd64` and `cli-v*` releases on `arm64`. |
 | `~/bin/chezmoi` | `twpayne/chezmoi` | Linux, macOS (`amd64`, `arm64`) | Extracts `chezmoi` from the release tarball. |
 | `~/bin/fzf` | `junegunn/fzf` | Linux, macOS (`amd64`, `arm64`) | Extracts `fzf` from the release tarball. |
 | `~/bin/jj` | `jj-vcs/jj` | Linux, macOS (`amd64`, `arm64`) | Extracts `jj` from the release tarball. |
@@ -77,7 +77,7 @@ Run `chezmoi update` to pull repository changes and apply them:
 chezmoi update
 ```
 
-`bin/bw_scripts` uses a `24h` refresh period.
+`bin/bw_scripts` and `amd64` `bin/bw.bin` use a `24h` refresh period.
 Versioned release entries cache immutable URLs until a new release appears.
 Pass `-R` to force an immediate refresh of all external entries:
 
