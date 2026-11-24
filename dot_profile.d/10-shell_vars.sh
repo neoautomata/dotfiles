@@ -52,7 +52,7 @@ PAGER="$(command -v less || command -v more || true)"
 if [ -n "$PAGER" ]; then
     export PAGER
     if [[ "$PAGER" == */less ]]; then
-        LESS="-SRi"
+        LESS="-SRci"
         export LESS
     fi
 fi

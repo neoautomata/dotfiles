@@ -10,6 +10,8 @@ HISTCONTROL=ignoreboth:erasedups
 
 HISTSIZE=1000000
 HISTFILESIZE=1000000
+# Record timestamps with 3 whitespace-separated fields (matches cpcmd).
+HISTTIMEFORMAT="%F %T %Z "
 
 # Append to history instead of overwriting it, and preserve multiline commands.
 shopt -s histappend
