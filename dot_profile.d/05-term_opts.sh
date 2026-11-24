@@ -32,6 +32,3 @@ if [ "${PROFILE_DEBUG:-0}" = "1" ]; then
     printf '%s\n' '05-term_opts: set umask.' >&2
 fi
 umask 022
-
-# Append to the history file instead of overwriting it.
-shopt -s histappend
